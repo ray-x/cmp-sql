@@ -6,6 +6,9 @@ local defaults = {
 }
 
 local source = {}
+if lprint == nil then
+  lprint = function(...) end
+end
 
 local sql_keys = require('cmp_sql.sql')
 source.new = function()
@@ -15,6 +18,7 @@ source.new = function()
 end
 
 source.get_keyword_pattern = function(_, params)
+  params = params or {}
   params.option = params.option or {}
   params.option = vim.tbl_deep_extend('keep', params.option, defaults)
   vim.validate({
@@ -24,10 +28,23 @@ source.get_keyword_pattern = function(_, params)
       '`opts.keyword_pattern` must be `string`',
     },
   })
+  -- lprint('get keyword pattern', params.option.keyword_pattern)
   return params.option.keyword_pattern
 end
 
-source.complete = function(self, params, callback)
+function source:is_available()
+  return true
+end
+
+
+source.get_debug_name = function()
+  return 'sql'
+end
+
+function source:complete(params, callback)
+  -- params = params or { context = { cursor_before_line = 'as' }, offset = 0 }
+  -- callback = callback or lprint
+  -- lprint('complete', params)
   local input = string.sub(params.context.cursor_before_line, params.offset)
   local items = {}
   local words = {}
@@ -43,12 +60,12 @@ source.complete = function(self, params, callback)
         label = w,
         insertText = word,
         dup = 0,
-        cmp = { kind_hl_group = '@keyword' },
+        cmp = { kind_hl_group = '@keyword.sql', kind_text = 'sql' },
       })
     end
   end
-  -- print('items', vim.inspect(items))
-  callback({ items = items, isIncomplete = true })
+  -- lprint('items', items)
+  callback({ items = items, isIncomplete = false })
 end
 
 return source
